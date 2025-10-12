@@ -3,27 +3,27 @@ on: push
 
 jobs:
   lint:
-    runs-on: ubuntu:latest
+    runs-on: ubuntu-latest
     steps:
       - name: linting
         run: echo "linting"
 
   test:
-    runs-on: ubuntu:latest
+    runs-on: ubuntu-latest
     needs: lint
     steps:
       - name: testing
         run: echo "testing"
 
   build:
-    runs-on: ubuntu:latest
+    runs-on: ubuntu-latest
     needs: test
     steps:
       - name: building
         run: echo "building"
 
   deploy:
-    runs-on: ubuntu:latest
+    runs-on: ubuntu-latest
     needs: build
     steps:
       - name: deploying

@@ -22,9 +22,6 @@ jobs:
       - name: Show Black diff
         if: failure() && steps.blackcheck.outcome == 'failure'
         run: black --diff --color .
-      - name: Apply Black Fixes
-        if: failure() && steps.blackcheck.outcome == 'failure'
-        run: black .
 
   test:
     runs-on: ubuntu-latest

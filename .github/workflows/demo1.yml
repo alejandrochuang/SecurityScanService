@@ -5,8 +5,19 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - name: linting
-        run: echo "linting"
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Install lint tools
+        run: |
+          pip install ruff black
+      - name: Run ruff (lint)
+        run: ruff check .
+      - name: Run Black (format check)
+        run: black --check
 
   test:
     runs-on: ubuntu-latest

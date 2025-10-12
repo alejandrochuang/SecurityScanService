@@ -20,7 +20,7 @@ jobs:
         id: blackcheck
         run: black --check .
       - name: Show Black diff
-        if: steps.blackcheck.outcome == 'failure'
+        if: failure() && steps.blackcheck.outcome == 'failure'
         run: black --diff --color .
 
   test:

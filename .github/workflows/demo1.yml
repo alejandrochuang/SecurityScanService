@@ -36,6 +36,7 @@ jobs:
       - name: Install httpx
         run: |
           pip install httpx pytest
+      - name: Run pytest 
         run: pytest -q
 
   build:

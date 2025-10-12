@@ -17,7 +17,11 @@ jobs:
       - name: Run ruff (lint)
         run: ruff check .
       - name: Run Black (format check)
+        id: blackcheck
         run: black --check .
+      - name: Show Black diff
+        if: steps.blackcheck.outcome == 'failure'
+        run: black --diff --color .
 
   test:
     runs-on: ubuntu-latest

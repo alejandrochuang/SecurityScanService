@@ -46,7 +46,7 @@ def scan_url(target) -> str:
         )
 
 
-def scan_image(name) -> str:
+def scan_image(target) -> str:
     print("inspeccionando imagen")
     try:
         result = subprocess.run(
@@ -61,7 +61,7 @@ def scan_image(name) -> str:
         print("excepción timeout?")
         raise HTTPException(
             status_code=504,
-            detail="Timeout: el escaneo tardó más de {}s".format(max_timeout),
+            detail="Timeout: el escaneo tardó más de 60s",
         )
 
 

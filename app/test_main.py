@@ -22,6 +22,9 @@ def test_scan_url_success(monkeypatch):
         "/api/scan", json={"scan_type": "url", "target": "scanme.nmap.org"}
     )
 
+    # Recomendado: comprobar status
+    assert response.status_code == 200
+
     print("\n--- DEBUG ---")
     print("response.status_code:", response.status_code)
     print("response.text:", repr(response.text))

@@ -38,7 +38,7 @@ jobs:
       - name: Install more dependencies
         run: pip install -r requirements-dev.txt
       - name: Run pytest 
-        run: pytest -q
+        run: pytest -q -vv -s
 
   build:
     runs-on: ubuntu-latest

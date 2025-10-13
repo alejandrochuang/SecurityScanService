@@ -14,12 +14,6 @@ class ScanRequest(BaseModel):
 app = FastAPI()
 templates = Jinja2Templates(directory="app/templates")
 
-
-class ScanRequest(BaseModel):
-    scan_type: str
-    target: str
-
-
 def scan_url(target) -> str:
     print("escaneando url")
     try:
@@ -48,7 +42,7 @@ def scan_url(target) -> str:
         print("excepción timeout?")
         raise HTTPException(
             status_code=504,
-            detail="Timeout: el escaneo tardó más de {}s".format(max_timeout),
+            detail="Timeout: el escaneo tardó más de 60s",
         )
 
 

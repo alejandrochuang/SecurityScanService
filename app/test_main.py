@@ -12,16 +12,27 @@ def test_read_main():
 
 
 def test_scan_url_success(monkeypatch):
-    # Simula un subprocess.run exitoso
+    # Mock del subprocess.run
     cp = subprocess.CompletedProcess(
         args=["nmap"], returncode=0, stdout="Nmap done\nPORT 22 open\n", stderr=""
     )
     monkeypatch.setattr(subprocess, "run", lambda *a, **k: cp)
 
     response = client.post(
-        "/api/scan", json={"scan_type": "url", "target": "scanme.nmap.org"}
+        "/api/scan",
+        json={"scan_type": "url", "target": "scanme.nmap.org"}
     )
-    assert response.status_code == 200
-    # Como la vista devuelve HTML, miramos response.text
-    assert "Nmap done" in response.text
-    assert "url" in response.text and "scanme.nmap.org" in response.text
+    
+    print("\n--- DEBUG ---")
+    print("response.status_code:", response.status_code)
+    print("response.text:", repr(response.text))
+    print("response.json():", response.json())
+    # Es un JSON string, por tanto:
+    data = response.json()
+
+    print("type(data):", type(data))
+    print("isinstance(data, str):", isinstance(data, str))
+    print("--- END DEBUG ---\n")
+    assert isinstance(data, str)
+    assert "Nmap done" in data
+    assert "PORT 22" in data

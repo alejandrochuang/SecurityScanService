@@ -19,10 +19,9 @@ def test_scan_url_success(monkeypatch):
     monkeypatch.setattr(subprocess, "run", lambda *a, **k: cp)
 
     response = client.post(
-        "/api/scan",
-        json={"scan_type": "url", "target": "scanme.nmap.org"}
+        "/api/scan", json={"scan_type": "url", "target": "scanme.nmap.org"}
     )
-    
+
     print("\n--- DEBUG ---")
     print("response.status_code:", response.status_code)
     print("response.text:", repr(response.text))

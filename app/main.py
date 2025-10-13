@@ -14,6 +14,7 @@ class ScanRequest(BaseModel):
 app = FastAPI()
 templates = Jinja2Templates(directory="app/templates")
 
+
 def scan_url(target) -> str:
     print("escaneando url")
     try:

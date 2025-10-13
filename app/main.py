@@ -1,10 +1,74 @@
 from fastapi import FastAPI, HTTPException, Request, Form
 from fastapi.responses import HTMLResponse
+from fastapi.responses import JSONResponse
 from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel
 import subprocess
+
+
+class ScanRequest(BaseModel):
+    scan_type: str
+    target: str
+
 
 app = FastAPI()
 templates = Jinja2Templates(directory="app/templates")
+
+
+class ScanRequest(BaseModel):
+    scan_type: str
+    target: str
+
+
+def scan_url(target) -> str:
+    print("escaneando url")
+    try:
+        result = subprocess.run(
+            [
+                "nmap",
+                "-sT",
+                "--top-ports",
+                "500",
+                "-Pn",
+                "-T4",
+                "--max-retries",
+                "1",
+                "-A",
+                "--host-timeout",
+                "45s",
+                target,
+            ],
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        output = result.stdout
+        return output
+    except subprocess.TimeoutExpired:
+        print("excepción timeout?")
+        raise HTTPException(
+            status_code=504,
+            detail="Timeout: el escaneo tardó más de {}s".format(max_timeout),
+        )
+
+
+def scan_image(name) -> str:
+    print("inspeccionando imagen")
+    try:
+        result = subprocess.run(
+            ["trivy", "image", target],
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        output = result.stdout
+        return output
+    except subprocess.TimeoutExpired:
+        print("excepción timeout?")
+        raise HTTPException(
+            status_code=504,
+            detail="Timeout: el escaneo tardó más de {}s".format(max_timeout),
+        )
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -27,50 +91,14 @@ def ui_scan(
         raise HTTPException(status_code=400, detail="Target no permitido")
 
     print("target ok")
-    try:
-        max_timeout = 100
-        print("ponemos un timeout de {}s".format(max_timeout))
-        if scan_type == "url":
-            print("escaneando url")
-            result = subprocess.run(
-                # ["nmap", "-sT", "-p", "22,80", "-Pn", "-T4", "--max-retries", "1", "-A", "--host-timeout", "45s", target],
-                [
-                    "nmap",
-                    "-sT",
-                    "--top-ports",
-                    "500",
-                    "-Pn",
-                    "-T4",
-                    "--max-retries",
-                    "1",
-                    "-A",
-                    "--host-timeout",
-                    "45s",
-                    target,
-                ],
-                capture_output=True,
-                text=True,
-                timeout=max_timeout,
-            )
-            output = result.stdout
-        elif scan_type == "docker":
-            print("inspeccionando container")
-            result = subprocess.run(
-                ["trivy", "image", target],
-                capture_output=True,
-                text=True,
-                timeout=max_timeout,
-            )
-            output = result.stdout
-        else:
-            print("tipo de escaneo no válido!")
-            raise HTTPException(status_code=400, detail="scan_type no válido!")
-    except subprocess.TimeoutExpired:
-        print("excepción timeout?")
-        raise HTTPException(
-            status_code=504,
-            detail="Timeout: el escaneo tardó más de {}s".format(max_timeout),
-        )
+    if scan_type == "url":
+        output = scan_url(target)
+
+    elif scan_type == "docker":
+        output = scan_image(target)
+    else:
+        print("tipo de escaneo no válido!")
+        raise HTTPException(status_code=400, detail="scan_type no válido!")
 
     return templates.TemplateResponse(
         "index.html",
@@ -81,3 +109,16 @@ def ui_scan(
             "target": target,
         },
     )
+
+
+@app.post("/api/scan", response_class=JSONResponse)
+def api_scan(scan: ScanRequest):
+    print("hola??")
+    if scan.scan_type == "url":
+        result = scan_url(scan.target)
+    elif scan.scan_type == "docker":
+        result = scan_image(scan.target)
+    else:
+        print("tipo de escaneo no válido!")
+        raise HTTPException(status_code=400, detail="scan_type no válido")
+    return result

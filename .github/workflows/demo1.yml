@@ -56,7 +56,7 @@ jobs:
       - name: Build docker image
         run: docker build -t securityscanservice .
       - name: Run container from image
-        run: docker run --rm -p 8000:8000 securityscanservice
+        run: docker run --rm - d -p 8000:8000 securityscanservice
       - name: Run pytest 
         run: pytest -q -vv -s
 

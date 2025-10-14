@@ -62,25 +62,25 @@ jobs:
           set -e
           # Espera a que / responda 200 (max 30s)
           for i in {1..30}; do
-            code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/)
-            if ["$code" = "200"]; then 
+            code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/ || echo 000)
+            if [ "$code" = "200" ]; then 
               echo "UP"; 
               break; 
             fi
             sleep 1
-            [ $i -eq 30 ] && echo "Service not ready" && docker logs securityscan && exit 1
+            [ $i -eq 30 ] && echo "Service not ready" && docker logs securityscanservice && exit 1
           done
           #POST sencillo a /api/scan y comprobar 200
           code=$(curl -s -o /dev/null -w "%{http_code}" \
             -H 'Content-Type: application/json' \
             -d '{"scan_type":"url","target":"scanme.nmap.org"}' \
             http://localhost:8000/api/scan)
-          [ "$code" = "200" ] || {echo "POST /api/scan failed ($code)"; docker logs securitycan; exit 1}
+          [ "$code" = "200" ] || {echo "POST /api/scan failed ($code)"; docker logs securityscanservice; exit 1;}
       - name: Run pytest 
         run: pytest -q -vv -s
       - name: Stop container
         if: always()
-        run: docker stop securityscan
+        run: docker stop securityscanservice
   deploy:
     runs-on: ubuntu-latest
     needs: build

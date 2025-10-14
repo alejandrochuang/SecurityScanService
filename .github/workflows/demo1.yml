@@ -54,9 +54,9 @@ jobs:
       - name: Install more dependencies
         run: pip install -r requirements-dev.txt
       - name: Build docker image
-        run: docker build -t securityscanservice .
+        run: docker image build -t securityscanservice .
       - name: Run container from image
-        run: docker run --rm - d -p 8000:8000 securityscanservice
+        run: docker container run --rm - d -p 8000:8000 securityscanservice
       - name: Run pytest 
         run: pytest -q -vv -s
 

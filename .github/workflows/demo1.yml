@@ -70,11 +70,18 @@ jobs:
             sleep 1
             [ $i -eq 30 ] && echo "Service not ready" && docker logs securityscan && exit 1
           done
+          
           #POST sencillo a /api/scan y comprobar 200
+          
+          echo "Haciendo POST /api/scan…"
+          
           code=$(curl -s -o /dev/null -w "%{http_code}" \
             -H 'Content-Type: application/json' \
             -d '{"scan_type":"url","target":"scanme.nmap.org"}' \
             http://localhost:8000/api/scan)
+          
+          echo "HTTP code: $code"
+          
           [ "$code" = "200" ] || { echo "POST /api/scan failed ($code)"; docker logs securityscan; exit 1; }
       - name: Run pytest 
         run: pytest -q -vv -s

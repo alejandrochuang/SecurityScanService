@@ -1,6 +1,11 @@
 name: My first workflow
 on: push
 
+permissions:
+  id-token: write
+  contents: read
+
+
 jobs:
   lint:
     runs-on: ubuntu-latest

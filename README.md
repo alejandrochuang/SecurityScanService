@@ -33,7 +33,7 @@ Securityscanservice
 4. Tech stack
 -fastAPI: backend framework
 -Uvicorn: ASGI server
--Jinja2: HTTML templating engine
+-Jinja2: HTML templating engine
 -Docker: containerization
 -Nmap: security scannning tool
 -Trivy: security scanning tool

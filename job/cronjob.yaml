@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: scanning
+spec:
+  schedule: "*/5 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: scanning
+            image: securityscanservice:latest
+            imagePullPolicy: IfNotPresent
+            command: ["/bin/sh", "-c"]
+            args:
+              - >
+                nmap -sT --top-ports 100 -Pn scanme.nmap.org &&
+                trivy image ubuntu:latest
+          restartPolicy: OnFailure

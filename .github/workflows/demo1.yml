@@ -85,6 +85,13 @@ jobs:
           [ "$code" = "200" ] || { echo "POST /api/scan failed ($code)"; docker logs securityscan; exit 1; }
       - name: Run pytest 
         run: pytest -q -vv -s
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::920008214838:role/github-oidc-role
+          aws-region: eu-west-3
+      - name: Verify identity
+        run: aws sts get-caller-identity
       - name: Stop container
         if: always()
         run: docker stop securityscan

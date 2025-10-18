@@ -97,6 +97,13 @@ jobs:
           aws-region: eu-west-3
       - name: Verify identity
         run: aws sts get-caller-identity
+      - uses: aws-actions/amazon-ecr-login@v2
+        id: ecr
+      - name: Build & push image
+        run: |
+          IMAGE=${{ steps.ecr.outputs.registry }}/securityscan/service:${{ github.sha }}
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
       - name: Stop container
         if: always()
         run: docker stop securityscan

@@ -139,23 +139,30 @@ jobs:
           role-to-assume: arn:aws:iam::920008214838:role/github-oidc-role
           aws-region: ${{ env.AWS_REGION }}
 
-       # Si App Runner tiene auto-deploy ON, solo espera y testea::
-      - name: Wait & smoke test
+      - name: Update App Runner to new image tag
         env:
           APP_RUNNER_ARN: arn:aws:apprunner:eu-west-3:920008214838:service/SecurityScanService/e8202154fd424ae9924baf590f047890
           ACCOUNT_ID: 920008214838
-          APP_URL: https://x8nwayy7if.eu-west-3.awsapprunner.com
+          REGION: ${{ env.AWS_REGION }}            # <-- asegúrate de tener AWS_REGION definido arriba (env:)
           REPO: securityscan/service
-          TAG: ${{ github.sha }} #tag inmutable que hemos empujado en build
+          TAG: ${{ github.sha }}
         run: |
+          set -e
+          : "${REGION:?REGION is empty}"           # falla si está vacía
           IMAGE="${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/${REPO}:${TAG}"
           echo "Updating service to image: $IMAGE"
-           aws apprunner update-service \
+          aws apprunner update-service \
             --service-arn "$APP_RUNNER_ARN" \
             --source-configuration "ImageRepository={ImageIdentifier=${IMAGE},ImageRepositoryType=ECR},AutoDeploymentsEnabled=true"
 
+      - name: Wait & smoke test
+        env:
+          APP_RUNNER_ARN: arn:aws:apprunner:eu-west-3:920008214838:service/SecurityScanService/e8202154fd424ae9924baf590f047890
+          APP_URL: https://x8nwayy7if.eu-west-3.awsapprunner.com
+        run: |
           for i in {1..40}; do
-            s=$(aws apprunner describe-service --service-arn "$APP_RUNNER_ARN" --query 'Service.Status' --output text)
+            s=$(aws apprunner describe-service --service-arn "$APP_RUNNER_ARN" --query 'Service.Status' --output text || echo "PENDING")
             echo "Status: $s"; [ "$s" = "RUNNING" ] && break; sleep 10
           done
-          curl -fS "$APP_URL" || exit 1
+          [ "$s" = "RUNNING" ] || { echo "Service not RUNNING"; exit 1; }
+          curl -fS "$APP_URL"

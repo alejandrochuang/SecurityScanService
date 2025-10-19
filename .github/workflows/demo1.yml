@@ -135,7 +135,9 @@ jobs:
       
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
-        with: { role-to-assume: arn:aws:iam::920008214838:role/github-oidc-role, aws-region: ${{ env.AWS_REGION }} }
+        with: 
+          role-to-assume: arn:aws:iam::920008214838:role/github-oidc-role
+          aws-region: ${{ env.AWS_REGION }} }
 
        # Si App Runner tiene auto-deploy ON, solo espera y testea:
       - name: Wait & smoke test

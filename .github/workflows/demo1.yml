@@ -5,6 +5,10 @@ permissions:
   id-token: write
   contents: read
 
+env: 
+  AWS_REGION: eu-west-3
+  #ECR_REPO: securityscan/service
+
 
 jobs:
   lint:
@@ -50,23 +54,29 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
           python-version: '3.11'
+      
       - name: Install dependencies
-        run: pip install -r requirements.txt
-      - name: Install more dependencies
-        run: pip install -r requirements-dev.txt
+        run: |
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+      
       - name: Build docker image
         run: docker image build -t securityscanservice .
+      
       - name: Run container from image
         run: docker container run --name securityscan -d -p 8000:8000 securityscanservice
+      
       - name: Smoke test (wait & ping / and POST /api/scan)
         run: |
           set -e
           # Espera a que / responda 200 (max 30s)
           for i in {1..30}; do
+            #
             code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/ || echo 000)
             if [ "$code" = "200" ]; then 
               echo "UP"; 
@@ -88,28 +98,50 @@ jobs:
           echo "HTTP code: $code"
           
           [ "$code" = "200" ] || { echo "POST /api/scan failed ($code)"; docker logs securityscan; exit 1; }
+      
       - name: Run pytest 
         run: pytest -q -vv -s
+      
+      - name: Stop container
+        if: always()
+        run: |
+          docker stop securityscan || true
+          docker rm   securityscan || true
+      
+      # --- Autenticación AWS + push a ECR (una sola vez aquí) ---
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::920008214838:role/github-oidc-role
-          aws-region: eu-west-3
+          aws-region: ${{ env.AWS_REGION }}
+      
       - name: Verify identity
         run: aws sts get-caller-identity
       - uses: aws-actions/amazon-ecr-login@v2
         id: ecr
+      
       - name: Build & push image
         run: |
           IMAGE=${{ steps.ecr.outputs.registry }}/securityscan/service:${{ github.sha }}
           docker build -t "$IMAGE" .
           docker push "$IMAGE"
-      - name: Stop container
-        if: always()
-        run: docker stop securityscan
+
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu:latest
     needs: build
     steps:
-      - name: deploying
-        run: echo "deploying"
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with: { role-to-assume: arn:aws:iam::920008214838:role/github-oidc-role, aws-region: ${{ env.AWS_REGION }} }
+
+       # Si App Runner tiene auto-deploy ON, solo espera y testea:
+      - name: Wait & smoke test
+        env:
+          APP_RUNNER_ARN: arn:aws:apprunner:eu-west-3:920008214838:service/SecurityScanService/e8202154fd424ae9924baf590f047890
+          APP_URL: https://x8nwayy7if.eu-west-3.awsapprunner.com
+        run: |
+          for i in {1..40}; do
+            s=$(aws apprunner describe-service --service-arn "$APP_RUNNER_ARN" --query 'Service.Status' --output text)
+            echo "Status: $s"; [ "$s" = "RUNNING" ] && break; sleep 10
+          done
+          curl -fS "$APP_URL" || exit 1

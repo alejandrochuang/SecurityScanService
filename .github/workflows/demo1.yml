@@ -131,6 +131,7 @@ jobs:
     needs: build
     steps:
       - uses: actions/checkout@v4
+      
       - uses: aws-actions/configure-aws-credentials@v4
         with: { role-to-assume: arn:aws:iam::920008214838:role/github-oidc-role, aws-region: ${{ env.AWS_REGION }} }
 

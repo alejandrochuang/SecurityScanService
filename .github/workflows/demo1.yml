@@ -139,7 +139,7 @@ jobs:
           role-to-assume: arn:aws:iam::920008214838:role/github-oidc-role
           aws-region: ${{ env.AWS_REGION }}
 
-       # Si App Runner tiene auto-deploy ON, solo espera y testea:
+       # Si App Runner tiene auto-deploy ON, solo espera y testea::
       - name: Wait & smoke test
         env:
           APP_RUNNER_ARN: arn:aws:apprunner:eu-west-3:920008214838:service/SecurityScanService/e8202154fd424ae9924baf590f047890

@@ -143,8 +143,17 @@ jobs:
       - name: Wait & smoke test
         env:
           APP_RUNNER_ARN: arn:aws:apprunner:eu-west-3:920008214838:service/SecurityScanService/e8202154fd424ae9924baf590f047890
+          ACCOUNT_ID: 920008214838
           APP_URL: https://x8nwayy7if.eu-west-3.awsapprunner.com
+          REPO: securityscan/service
+          TAG: ${{ github.sha }} #tag inmutable que hemos empujado en build
         run: |
+          IMAGE="${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/${REPO}:${TAG}"
+          echo "Updating service to image: $IMAGE"
+           aws apprunner update-service \
+            --service-arn "$APP_RUNNER_ARN" \
+            --source-configuration "ImageRepository={ImageIdentifier=${IMAGE},ImageRepositoryType=ECR},AutoDeploymentsEnabled=true"
+
           for i in {1..40}; do
             s=$(aws apprunner describe-service --service-arn "$APP_RUNNER_ARN" --query 'Service.Status' --output text)
             echo "Status: $s"; [ "$s" = "RUNNING" ] && break; sleep 10
